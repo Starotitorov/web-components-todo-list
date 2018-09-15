@@ -1,0 +1,78 @@
+<link rel="import" href="./custom-html-element.html">
+
+<template id="add-form-template">
+  <style>
+    #form {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .input {
+      flex-grow: 1;
+      height: calc(2.25rem + 2px);
+      padding: .375rem .75rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #495057;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      margin-right: 8px;
+    }
+
+    .btn {
+      color: white;
+      background: #508abc;
+      border: solid 1px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1.5;
+      padding: .375rem .75rem;
+    }
+  </style>
+  <form id="form">
+    <input
+      name="text"
+      class="input"
+      id="text"
+      placeholder="Enter text">
+    <button type="submit" class="btn">Add item</button>
+  </form>
+</template>
+
+<script>
+{
+  const doc = document.currentScript.ownerDocument;
+
+  class AddForm extends CustomHTMLElement {
+    static get is() {
+      return 'add-form';
+    }
+
+    static get _document() {
+      return doc;
+    }
+
+    constructor() {
+      super();
+
+      this.$.form.onsubmit = (e) => {
+        e.preventDefault();
+
+        const item = {
+          text: this.$.form.elements.text.value
+        };
+
+        this.dispatchEvent(new CustomEvent('add-item', {
+          detail: { item }, bubbles: false
+        }));
+
+        this.$.form.reset();
+      }
+    }
+  }
+
+  customElements.define(AddForm.is, AddForm);
+}
+</script>

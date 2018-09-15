@@ -1,0 +1,70 @@
+<link rel="import" href="./custom-html-element.html">
+
+<template id="todo-list-template">
+  <style>
+    .list {
+      padding: 0;
+      margin: 0;
+    }
+
+    .list li {
+      list-style-type: none;
+      padding: .75rem 1.25rem;
+      border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+
+    .list :last-child {
+      border-bottom: none;
+    }
+  </style>
+  <ul id="list" class="list"></ul>
+</template>
+
+<script>
+{
+  const ITEMS_ATTRIBUTE_NAME = 'items';
+  const doc = document.currentScript.ownerDocument;
+
+  class TodoList extends CustomHTMLElement {
+    static get is() {
+      return 'todo-list';
+    }
+
+    static get _document() {
+      return doc;
+    }
+
+    _handleItemsChange(itemsStr) {
+      const items = itemsStr ? JSON.parse(itemsStr) : [];
+
+      const fragment = document.createDocumentFragment();
+      items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.textContent = `${index + 1}. ${item.text}`;
+
+        fragment.appendChild(li);
+      });
+
+      this.$.list.innerHTML = '';
+      this.$.list.appendChild(fragment);
+    }
+
+    static get observedAttributes() {
+      return [ITEMS_ATTRIBUTE_NAME];
+    }
+
+    attributeChangedCallback(attribute, oldValue, newValue) {
+      if (attribute === ITEMS_ATTRIBUTE_NAME) {
+        this._handleItemsChange(newValue)
+      }
+    }
+
+    connectedCallback() {
+      const itemsStr = this.getAttribute('items');
+      this._handleItemsChange(itemsStr);
+    }
+  }
+
+  customElements.define(TodoList.is, TodoList);
+}
+</script>

@@ -17,7 +17,7 @@
       color: #495057;
       border: 1px solid #ced4da;
       border-radius: 5px;
-      margin-right: 8px;
+      margin-right: 10px;
     }
 
     .btn {
@@ -57,19 +57,26 @@
     constructor() {
       super();
 
-      this.$.form.onsubmit = (e) => {
-        e.preventDefault();
+      this._handleFormSubmit = this._handleFormSubmit.bind(this);
+    }
 
-        const item = {
-          text: this.$.form.elements.text.value
-        };
+    connectedCallback() {
+      this.$.form.addEventListener('submit', this._handleFormSubmit);
+    }
 
-        this.dispatchEvent(new CustomEvent('add-item', {
-          detail: { item }, bubbles: false
-        }));
+    _handleFormSubmit(e) {
+      e.preventDefault();
 
-        this.$.form.reset();
-      }
+      const item = {
+        text: this.$.form.elements.text.value,
+        checked: false
+      };
+
+      this.dispatchEvent(new CustomEvent('add-item', {
+        detail: { item }, bubbles: false
+      }));
+
+      this.$.form.reset();
     }
   }
 

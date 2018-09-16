@@ -38,6 +38,8 @@
 
 <script>
 {
+  const ITEMS_STORAGE_KEY = 'todo-list-items';
+  const INITIAL_ITEMS = [{ text: 'Add items to this list.', checked: false }];
   const doc = document.currentScript.ownerDocument;
 
   class TodoList extends CustomHTMLElement {
@@ -51,56 +53,65 @@
     constructor() {
       super();
 
-      this.items = [{ text: 'Add items to this list.' }];
+      this._handleRemoveItem = this._handleRemoveItem.bind(this);
+      this._handleAddItem = this._handleAddItem.bind(this);
+      this._handleCheckItem = this._handleCheckItem.bind(this);
+
+      this.items = JSON.parse(localStorage.getItem(ITEMS_STORAGE_KEY)) || INITIAL_ITEMS;
     }
 
     connectedCallback() {
-      this.$.form.addEventListener(
-        'add-item',
-        e => this.items = [...this.items, e.detail.item]
-      );
-
-      this.$.list.addEventListener('remove-item', e => {
-        this.items = this.items.filter((item, index) => index !== Number(e.detail.id));
-      });
-
-      this.$.list.addEventListener('check-item', e => {
-        this.items = this.items.map((item, index) => {
-          return index !== Number(e.detail.id) ? item : { ...item, checked: !item.checked }
-        })
-      })
-    }
-
-    _render() {
-      const fragment = document.createDocumentFragment();
-      this.items.forEach((item, index) => {
-        const li = document.createElement('todo-item');
-        li.setAttribute('id', index);
-        li.setAttribute('text', `${index + 1}. ${item.text}`);
-
-        if (item.checked) {
-          li.setAttribute('checked', '');
-        }
-
-        if (index !== this.items.length - 1) {
-          li.setAttribute('bordered', '');
-        }
-
-        fragment.appendChild(li);
-      });
-
-      this.$.list.innerHTML = '';
-      this.$.list.appendChild(fragment);
+      this.$.form.addEventListener('add-item', this._handleAddItem);
+      this.$.list.addEventListener('remove-item', this._handleRemoveItem);
+      this.$.list.addEventListener('check-item', this._handleCheckItem)
     }
 
     set items(value) {
       this._items = value;
+
+      localStorage.setItem(ITEMS_STORAGE_KEY, JSON.stringify(this._items));
 
       this._render();
     }
 
     get items() {
       return this._items;
+    }
+
+    _handleAddItem(e) {
+      this.items = [...this.items, e.detail.item]
+    }
+
+    _handleRemoveItem(e) {
+      this.items = this.items.filter((item, index) => index !== Number(e.detail.id));
+    }
+
+    _handleCheckItem(e) {
+      this.items = this.items.map((item, index) => {
+        return index !== Number(e.detail.id) ? item : { ...item, checked: !item.checked }
+      });
+    }
+
+    _render() {
+      const fragment = document.createDocumentFragment();
+      this.items.forEach((item, index) => {
+        const listItem = document.createElement('todo-item');
+        listItem.setAttribute('id', index);
+        listItem.setAttribute('text', `${index + 1}. ${item.text}`);
+
+        if (item.checked) {
+          listItem.setAttribute('checked', '');
+        }
+
+        if (index !== this.items.length - 1) {
+          listItem.setAttribute('bordered', '');
+        }
+
+        fragment.appendChild(listItem);
+      });
+
+      this.$.list.innerHTML = '';
+      this.$.list.appendChild(fragment);
     }
   }
 

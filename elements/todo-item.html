@@ -73,22 +73,32 @@
         return doc;
       }
 
+      constructor() {
+        super();
+
+        this._handleRemoveItem = this._handleRemoveItem.bind(this);
+        this._handleCheckItem = this._handleCheckItem.bind(this);
+      }
+
       connectedCallback() {
-        const id = this.getAttribute('id');
-
-        this.$.btn.addEventListener('click', e => {
-          e.preventDefault();
-
-          this.dispatchEvent(new CustomEvent('remove-item', { detail: { id }, bubbles: true }));
-        });
-
-        this.$.checkbox.addEventListener('click', e => {
-          e.preventDefault();
-
-          this.dispatchEvent(new CustomEvent('check-item', { detail: { id }, bubbles: true }));
-        });
+        this.$.btn.addEventListener('click', this._handleRemoveItem);
+        this.$.checkbox.addEventListener('click', this._handleCheckItem);
 
         this._render();
+      }
+
+      _handleRemoveItem(e) {
+        e.preventDefault();
+
+        const id = this.getAttribute('id');
+        this.dispatchEvent(new CustomEvent('remove-item', { detail: { id }, bubbles: true }));
+      }
+
+      _handleCheckItem(e) {
+        e.preventDefault();
+
+        const id = this.getAttribute('id');
+        this.dispatchEvent(new CustomEvent('check-item', { detail: { id }, bubbles: true }));
       }
 
       _render() {

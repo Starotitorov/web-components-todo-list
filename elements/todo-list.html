@@ -1,46 +1,90 @@
 <link rel="import" href="./custom-html-element.html">
+<link rel="import" href="./add-form.html">
+<link rel="import" href="./todo-item.html">
 
 <template id="todo-list-template">
   <style>
+    .container {
+      width: 450px;
+      box-sizing: border-box;
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+      margin: 40px auto;
+    }
+
+    .title {
+      font-size: 2.1em;
+      margin-top: 5px;
+      margin-bottom: 20px;
+      color: green;
+      line-height: 1;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
     .list {
       padding: 0;
       margin: 0;
     }
-
-    .list li {
-      list-style-type: none;
-      padding: .75rem 1.25rem;
-      border-bottom: 1px solid rgba(0,0,0,.125);
-    }
-
-    .list :last-child {
-      border-bottom: none;
-    }
   </style>
-  <ul id="list" class="list"></ul>
+  <div class="container">
+    <h1 class="title">Todo List</h1>
+    <add-form id="form"></add-form>
+    <ul id="list" class="list"></ul>
+  </div>
 </template>
 
 <script>
 {
-  const ITEMS_ATTRIBUTE_NAME = 'items';
   const doc = document.currentScript.ownerDocument;
 
   class TodoList extends CustomHTMLElement {
     static get is() {
       return 'todo-list';
     }
-
     static get _document() {
       return doc;
     }
 
-    _handleItemsChange(itemsStr) {
-      const items = itemsStr ? JSON.parse(itemsStr) : [];
+    constructor() {
+      super();
 
+      this.items = [{ text: 'Add items to this list.' }];
+    }
+
+    connectedCallback() {
+      this.$.form.addEventListener(
+        'add-item',
+        e => this.items = [...this.items, e.detail.item]
+      );
+
+      this.$.list.addEventListener('remove-item', e => {
+        this.items = this.items.filter((item, index) => index !== Number(e.detail.id));
+      });
+
+      this.$.list.addEventListener('check-item', e => {
+        this.items = this.items.map((item, index) => {
+          return index !== Number(e.detail.id) ? item : { ...item, checked: !item.checked }
+        })
+      })
+    }
+
+    _render() {
       const fragment = document.createDocumentFragment();
-      items.forEach((item, index) => {
-        const li = document.createElement('li');
-        li.textContent = `${index + 1}. ${item.text}`;
+      this.items.forEach((item, index) => {
+        const li = document.createElement('todo-item');
+        li.setAttribute('id', index);
+        li.setAttribute('text', `${index + 1}. ${item.text}`);
+
+        if (item.checked) {
+          li.setAttribute('checked', '');
+        }
+
+        if (index !== this.items.length - 1) {
+          li.setAttribute('bordered', '');
+        }
 
         fragment.appendChild(li);
       });
@@ -49,19 +93,14 @@
       this.$.list.appendChild(fragment);
     }
 
-    static get observedAttributes() {
-      return [ITEMS_ATTRIBUTE_NAME];
+    set items(value) {
+      this._items = value;
+
+      this._render();
     }
 
-    attributeChangedCallback(attribute, oldValue, newValue) {
-      if (attribute === ITEMS_ATTRIBUTE_NAME) {
-        this._handleItemsChange(newValue)
-      }
-    }
-
-    connectedCallback() {
-      const itemsStr = this.getAttribute('items');
-      this._handleItemsChange(itemsStr);
+    get items() {
+      return this._items;
     }
   }
 

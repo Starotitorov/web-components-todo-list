@@ -1,0 +1,111 @@
+<link rel="import" href="./custom-html-element.html">
+
+<template id="todo-item-template">
+  <style>
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      list-style-type: none;
+      padding: .75rem 1.25rem;
+    }
+
+    :host([bordered]) .list-item {
+      border-bottom: 1px solid rgba(0, 0, 0, .125);
+    }
+
+    .completed {
+      text-decoration: line-through;
+    }
+
+    .checkbox {
+      margin-right: 8px;
+    }
+
+    .cross {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      opacity: 0.3;
+      cursor: pointer;
+    }
+
+    .cross:hover {
+      opacity: 1;
+    }
+
+    .cross:before, .cross:after {
+      position: absolute;
+      left: 8px;
+      content: ' ';
+      height: 18px;
+      width: 2px;
+      background-color: #333;
+    }
+
+    .cross:before {
+      transform: rotate(45deg);
+    }
+
+    .cross:after {
+      transform: rotate(-45deg);
+    }
+  </style>
+  <li class="list-item">
+    <label>
+      <input id="checkbox" class="checkbox" type="checkbox" />
+      <span id="text"></span>
+    </label>
+    <span id="btn" class="cross"></span>
+  </li>
+</template>
+
+<script>
+  {
+    const doc = document.currentScript.ownerDocument;
+
+    class TodoItem extends CustomHTMLElement {
+      static get is() {
+        return 'todo-item';
+      }
+
+      static get _document() {
+        return doc;
+      }
+
+      connectedCallback() {
+        const id = this.getAttribute('id');
+
+        this.$.btn.addEventListener('click', e => {
+          e.preventDefault();
+
+          this.dispatchEvent(new CustomEvent('remove-item', { detail: { id }, bubbles: true }));
+        });
+
+        this.$.checkbox.addEventListener('click', e => {
+          e.preventDefault();
+
+          this.dispatchEvent(new CustomEvent('check-item', { detail: { id }, bubbles: true }));
+        });
+
+        this._render();
+      }
+
+      _render() {
+        const text = this.getAttribute('text');
+        const checked = this.hasAttribute('checked');
+
+        this.$.text.textContent = text;
+        if (checked) {
+          this.$.text.classList.add('completed');
+          this.$.checkbox.setAttribute('checked', '');
+        } else {
+          this.$.text.classList.remove('completed');
+          this.$.checkbox.removeAttribute('checked');
+        }
+      }
+    }
+
+    customElements.define(TodoItem.is, TodoItem);
+  }
+</script>
